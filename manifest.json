@@ -1,0 +1,36 @@
+{
+	"manifest_version": 3,
+	"version": "1.0",
+	"name": "OGS Tricks",
+	"description": "OGS Tricks Extension",
+	"content_scripts": [
+		{
+			"matches": [
+				"https://online-go.com/*"
+			],
+			"css": [
+				"styles.css"
+			]
+		},
+		{
+			"matches": [
+				"https://online-go.com/*"
+			],
+			"js": [
+				"content.js"
+			],
+			"run_at": "document_end"
+		}
+	],
+	"host_permissions": [
+		"https://online-go.com/*"
+	],
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": "icon.png"
+	},
+	"permissions": [
+		"storage",
+		"scripting"
+	]
+}
