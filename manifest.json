@@ -25,12 +25,16 @@
 	"host_permissions": [
 		"https://online-go.com/*"
 	],
+	"background": {
+		"service_worker": "background.js"
+	},
 	"action": {
 		"default_popup": "popup.html",
 		"default_icon": "icon.png"
 	},
 	"permissions": [
 		"storage",
-		"scripting"
+		"scripting",
+		"webNavigation"
 	]
 }
