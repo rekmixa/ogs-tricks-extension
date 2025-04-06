@@ -29,7 +29,16 @@ function applyOgsAIDisabledStyles(value) {
 
         .ogs-disable-ai text.subscript {
           display: none;
-        }`
+        }
+
+        .ogs-disable-ai text.letter {
+          display: none;
+        }
+
+        .ogs-disable-ai use[opacity] {
+          display: none;
+        }
+      `
 
       goban.shadowRoot.appendChild(gobanStyles)
     }
@@ -69,7 +78,7 @@ function applyOptions() {
   })
   storage.get('ogsHideGameState', function (data) {
     console.log('ogsHideGameState', data)
-    applyOgsHideGameStateStyles(data.ogsAiDisabled)
+    applyOgsHideGameStateStyles(data.ogsHideGameState)
   })
 }
 
