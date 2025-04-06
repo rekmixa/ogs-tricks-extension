@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-04-07
+### Added
+- hideLastMoveMark option
+
 ## [0.0.3] - 2025-04-07
 ### Fixed
 - ogsHideGameState & ogsAiDisabled options

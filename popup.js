@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const ogsAiDisabledOption = document.getElementById('ogsAiDisabled')
   const ogsHideGameStateOption = document.getElementById('ogsHideGameState')
   const oneColorGoOption = document.getElementById('oneColorGo')
+  const hideLastMoveMarkOption = document.getElementById('hideLastMoveMark')
   const storage = chrome.storage.sync || chrome.storage.local
 
   storage.get('ogsAiDisabled', function (data) {
@@ -16,6 +17,10 @@ document.addEventListener('DOMContentLoaded', function () {
     oneColorGoOption.checked = data.oneColorGo || false
   })
 
+  storage.get('hideLastMoveMark', function (data) {
+    hideLastMoveMarkOption.checked = data.hideLastMoveMark || false
+  })
+
   ogsAiDisabledOption.addEventListener('change', function () {
     storage.set({ ogsAiDisabled: ogsAiDisabledOption.checked })
   })
@@ -26,5 +31,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   oneColorGoOption.addEventListener('change', function () {
     storage.set({ oneColorGo: oneColorGoOption.checked })
+  })
+
+  hideLastMoveMarkOption.addEventListener('change', function () {
+    storage.set({ hideLastMoveMark: hideLastMoveMarkOption.checked })
   })
 })
