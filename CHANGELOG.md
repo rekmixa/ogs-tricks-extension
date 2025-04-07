@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-04-07
+### Removed
+- background.js worker
+
 ## [0.1.0] - 2025-04-07
 ### Added
 - hideLastMoveMark option

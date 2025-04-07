@@ -211,9 +211,3 @@ chrome.storage.onChanged.addListener(function (changes) {
     applyHideLastMoveMarkStyles(changes.hideLastMoveMark.newValue)
   }
 })
-
-chrome.runtime.onMessage.addListener((request) => {
-  if (request.action === 'ogsTricks.applyOptions') {
-    applyOptions()
-  }
-})
