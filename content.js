@@ -266,7 +266,7 @@ const extension = {
       if (enabled) {
         use.setAttribute('data-old-href', color)
         use.setAttribute('href', this.gobanState.stonesColor)
-      } else if (use.hasAttribute('data-old-href')) {
+      } else if (use.hasAttribute('data-old-href') && use.getAttribute('href') !== use.getAttribute('data-old-href')) {
         use.setAttribute('href', use.getAttribute('data-old-href'))
       }
     })
