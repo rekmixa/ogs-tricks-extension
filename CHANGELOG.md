@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-04-07
+### Added
+- One-color go mode
+
 ## [0.1.1] - 2025-04-07
 ### Removed
 - background.js worker

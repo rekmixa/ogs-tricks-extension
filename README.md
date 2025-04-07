@@ -4,8 +4,8 @@
 
 ## Features
 
-- Normal OGS logo
+- Usual OGS logo
 - Ability to disable AI
 - Ability to hide game state
-- Ability to enable one-color go (wip)
+- Ability to enable one-color go
 - Ability to hide last move mark

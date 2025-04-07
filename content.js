@@ -1,6 +1,14 @@
 const storage = chrome.storage.sync || chrome.storage.local
 
 const extension = {
+  gobanState: {
+    goban: null,
+    observer: null,
+    oneColorGo: false,
+    stonesColor: null,
+    isWhite: true,
+  },
+
   init() {
     this.applyOptions()
     document.addEventListener('DOMContentLoaded', () => {
@@ -68,6 +76,8 @@ const extension = {
       return
     }
 
+    this.initGobanObserver(goban)
+
     let gobanStyles = goban.shadowRoot.querySelector('style[data-ogs-tricks]')
 
     if (gobanStyles === null) {
@@ -125,6 +135,36 @@ const extension = {
     }
   },
 
+  initGobanObserver(goban) {
+    if (this.gobanState.goban === null) {
+      this.gobanState.goban = goban
+    }
+
+    if (this.gobanState.goban !== goban) {
+      console.log('goban changed...')
+      this.gobanState.goban = goban
+
+      if (this.gobanState.observer !== null) {
+        this.gobanState.observer.disconnect()
+        this.gobanState.observer = null
+        console.log('disconnecting observer..')
+      }
+    }
+
+    if (this.gobanState.observer === null) {
+      console.log('initializing observer')
+
+      this.gobanState.observer = new MutationObserver(() => {
+        this.handleMoveOnGoban()
+      })
+
+      this.gobanState.observer.observe(goban.shadowRoot, {
+        childList: true,
+        subtree: true,
+      })
+    }
+  },
+
   applyOgsAIDisabledStyles(value) {
     let goban = document.querySelector('.Goban > .Goban')
     let gobanSvg = null
@@ -155,6 +195,7 @@ const extension = {
   },
 
   applyOneColorGo(value) {
+    this.gobanState.oneColorGo = value
     const goban = document.querySelector('.Goban > .Goban')
 
     if (goban === null) {
@@ -172,6 +213,113 @@ const extension = {
     } else {
       gobanSvg.classList.remove('ogs-one-color-go')
     }
+
+    this.handleMoveOnGoban()
+  },
+
+  handleMoveOnGoban() {
+    const enabled = this.gobanState.oneColorGo
+
+    /** @type {Element}  */
+    const gobanSvg = this.gobanState.goban.shadowRoot.querySelector('svg')
+
+    if (gobanSvg === null) {
+      return
+    }
+
+    if (this.gobanState.stonesColor !== null) {
+      const defs = gobanSvg.querySelector(`defs > g[id="${this.gobanState.stonesColor.replace('#', '')}"]`)
+      if (defs === null) {
+        this.gobanState.stonesColor = null
+      }
+    }
+
+    if (this.gobanState.stonesColor === null) {
+      const firstStoneDef = gobanSvg.querySelector('defs g.stone')
+      if (firstStoneDef === null) {
+        return
+      }
+
+      if (!firstStoneDef.hasAttribute('id')) {
+        console.error('firstStoneDef has not id')
+
+        return
+      }
+
+      this.gobanState.stonesColor = '#' + firstStoneDef.getAttribute('id')
+      console.log('stonesColor', this.gobanState.stonesColor)
+    }
+
+    const allStones = gobanSvg.querySelectorAll('g.grid > g')
+
+    allStones.forEach(stone => {
+      const use = stone.querySelector('use[href]')
+      if (use === null) {
+        return
+      }
+
+      const color = use.getAttribute('href')
+      if (enabled && color === this.gobanState.stonesColor) {
+        return
+      }
+
+      if (enabled) {
+        use.setAttribute('data-old-href', color)
+        use.setAttribute('href', this.gobanState.stonesColor)
+      } else if (use.hasAttribute('data-old-href')) {
+        use.setAttribute('href', use.getAttribute('data-old-href'))
+      }
+    })
+
+    const lastMoveCircle = gobanSvg.querySelector('circle.last-move')
+
+    if (lastMoveCircle !== null) {
+      if (!lastMoveCircle.hasAttribute('data-old-stroke')) {
+        lastMoveCircle.setAttribute('data-old-stroke', lastMoveCircle.getAttribute('stroke'))
+      }
+      lastMoveCircle.setAttribute('stroke', enabled ? (this.gobanState.isWhite ? '#000000' : '#FFFFFF') : lastMoveCircle.getAttribute('data-old-stroke'))
+    }
+
+    const textLetters = gobanSvg.querySelectorAll('g.grid text.letter')
+    textLetters.forEach(letter => {
+      if (!letter.hasAttribute('data-old-fill')) {
+        letter.setAttribute('data-old-fill', letter.getAttribute('fill'))
+      }
+      letter.setAttribute('fill', enabled ? (this.gobanState.isWhite ? '#000000' : '#FFFFFF') : letter.getAttribute('data-old-fill'))
+    })
+
+    const rectangles = gobanSvg.querySelectorAll('g.grid rect[fill][stroke]')
+    let firstRectangle = null
+
+    rectangles.forEach(rect => {
+      if (firstRectangle === null) {
+        firstRectangle = rect
+      }
+
+      if (rect === firstRectangle) {
+        return
+      }
+
+      if (enabled) {
+        if (rect.getAttribute('fill') !== firstRectangle.getAttribute('fill')) {
+          rect.setAttribute('data-old-fill', rect.getAttribute('fill'))
+          rect.setAttribute('fill', firstRectangle.getAttribute('fill'))
+        }
+
+        if (rect.getAttribute('stroke') !== firstRectangle.getAttribute('stroke')) {
+          rect.setAttribute('data-old-stroke', rect.getAttribute('stroke'))
+          rect.setAttribute('stroke', firstRectangle.getAttribute('stroke'))
+        }
+      } else {
+        if (rect.hasAttribute('data-old-fill') && rect.getAttribute('fill') !== rect.getAttribute('data-old-fill')) {
+          rect.setAttribute('fill', rect.getAttribute('data-old-fill'))
+        }
+
+        if (rect.hasAttribute('data-old-stroke') && rect.getAttribute('stroke') !== rect.getAttribute('data-old-stroke')) {
+          rect.setAttribute('stroke', rect.getAttribute('data-old-stroke'))
+        }
+      }
+    })
   },
 
   applyHideLastMoveMarkStyles(value) {
