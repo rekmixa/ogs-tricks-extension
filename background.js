@@ -1,3 +1,6 @@
+// importScripts(chrome.runtime.getURL('lib/gif.js'))
+// importScripts(chrome.runtime.getURL('lib/gif.worker.js'))
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'captureTab') {
     let tabId, windowId

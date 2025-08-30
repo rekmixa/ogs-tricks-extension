@@ -17,6 +17,7 @@
 				"https://online-go.com/*"
 			],
 			"js": [
+				"lib/gif.js",
 				"content.js"
 			],
 			"run_at": "document_end"

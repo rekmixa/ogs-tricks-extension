@@ -437,9 +437,80 @@ const downloadFile = (url) => {
   a.click()
 }
 
-chrome.runtime.onMessage.addListener(async (msg) => {
-  if (msg.type !== 'makeGameScreenshot') return
+const createGIF = (frames, frameDelay = 500) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Создаём GIF
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        workerScript: chrome.runtime.getURL('lib/gif.worker.js'),
+      })
 
-  const url = await makeBlockScreenshot('div.Goban[data-game-id]')
-  downloadFile(url)
+      let loadedCount = 0
+
+      frames.forEach((dataUrl) => {
+        const img = new Image()
+        img.src = dataUrl
+        img.onload = () => {
+          gif.addFrame(img, { delay: frameDelay })
+          loadedCount++
+          if (loadedCount === frames.length) {
+            gif.render()
+          }
+        }
+        img.onerror = reject
+      })
+
+      gif.on('finished', (blob) => {
+        // Отправляем готовый Blob в background для скачивания
+        const url = URL.createObjectURL(blob)
+
+        resolve(url)
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+chrome.runtime.onMessage.addListener(async (msg) => {
+  console.log(msg)
+  const gobanSelector = 'div.Goban[data-game-id]'
+
+  switch (msg.type) {
+    case 'makeGameScreenshot':
+      const url = await makeBlockScreenshot(gobanSelector)
+      downloadFile(url)
+      break
+    case 'makeGameGIF':
+      const stepForwardIcon = document.querySelector(
+        'button.move-control > i.fa-step-forward',
+      )
+      if (!stepForwardIcon) {
+        console.error('stepForwardIcon not found')
+        return
+      }
+
+      const nextMoveButton = stepForwardIcon.parentElement
+      if (!nextMoveButton) {
+        console.error('nextMoveButton not found')
+        return
+      }
+
+      const screenshots = []
+      for (let i = 0; i < Number(msg.movesCount); i++) {
+        console.log(i)
+        nextMoveButton.click()
+        screenshots.push(await makeBlockScreenshot(gobanSelector))
+        await delay(300)
+      }
+
+      const gifUrl = await createGIF(screenshots, 500)
+      downloadFile(gifUrl)
+
+      break
+  }
 })

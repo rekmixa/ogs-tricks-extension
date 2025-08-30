@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const oneColorGoOption = document.getElementById('oneColorGo')
   const hideLastMoveMarkOption = document.getElementById('hideLastMoveMark')
   const makeGameScreenshotButton = document.getElementById('makeGameScreenshot')
+  const movesCountInput = document.getElementById('movesCount')
+  const makeGameGIFButton = document.getElementById('makeGameGIF')
   const storage = chrome.storage.sync || chrome.storage.local
 
   storage.get('ogsAiDisabled', function (data) {
@@ -42,6 +44,19 @@ document.addEventListener('DOMContentLoaded', function () {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tabId = tabs[0].id // только число
       chrome.tabs.sendMessage(tabId, { type: 'makeGameScreenshot' })
+    })
+  })
+
+  makeGameGIFButton.addEventListener('click', () => {
+    const movesCount = movesCountInput.value
+    if (movesCount <= 0 || !movesCount) {
+      console.error('Moves count must be set!')
+      return
+    }
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0].id // только число
+      chrome.tabs.sendMessage(tabId, { type: 'makeGameGIF', movesCount })
     })
   })
 })
