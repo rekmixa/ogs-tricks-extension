@@ -9,3 +9,5 @@
 - Ability to hide game state
 - Ability to enable one-color go
 - Ability to hide last move mark
+- Ability to make game screenshot
+- Ability to record game into GIF file
