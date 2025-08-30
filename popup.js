@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const ogsHideGameStateOption = document.getElementById('ogsHideGameState')
   const oneColorGoOption = document.getElementById('oneColorGo')
   const hideLastMoveMarkOption = document.getElementById('hideLastMoveMark')
+  const makeGameScreenshotButton = document.getElementById('makeGameScreenshot')
   const storage = chrome.storage.sync || chrome.storage.local
 
   storage.get('ogsAiDisabled', function (data) {
@@ -35,5 +36,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   hideLastMoveMarkOption.addEventListener('change', function () {
     storage.set({ hideLastMoveMark: hideLastMoveMarkOption.checked })
+  })
+
+  makeGameScreenshotButton.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0].id // только число
+      chrome.tabs.sendMessage(tabId, { type: "makeGameScreenshot" })
+    })
   })
 })

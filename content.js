@@ -365,3 +365,40 @@ const extension = {
 }
 
 extension.init()
+
+chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
+  if (msg.type !== "makeGameScreenshot") return
+
+  const block = document.querySelector("div.Goban[data-game-id]")
+  if (!block) return console.error("Block not found")
+
+  // попросим background сделать скриншот вкладки
+  chrome.runtime.sendMessage({ type: "captureTab" }, (dataUrl) => {
+    if (!dataUrl) return console.error("Screenshot failed")
+    const dpr = window.devicePixelRatio || 1
+    const rect = block.getBoundingClientRect()
+    const x = rect.left * dpr
+    const y = rect.top * dpr
+    const width = rect.width * dpr
+    const height = rect.height * dpr
+
+    const canvas = document.createElement("canvas")
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext("2d")
+
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, x, y, width, height, 0, 0, width, height)
+
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "goban.png"
+        a.click()
+      })
+    }
+    img.src = dataUrl
+  })
+})
