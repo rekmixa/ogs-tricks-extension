@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-08-30
+### Added
+- Ability to make game screenshots
+- Ability to record game into GIF files
+
 ## [0.2.0] - 2025-04-07
 ### Added
 - One-color go mode
