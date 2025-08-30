@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OGS Tricks</title>
     <link rel="stylesheet" href="popup.css" />
+    <script src="lib/gif.js"></script>
   </head>
   <body>
     <h2>OGS Tricks</h2>
@@ -37,13 +38,24 @@
         Make game screenshot
       </button>
     </div>
+    <hr />
     <div>
       <label>
         Moves count:
-        <input type="number" name="movesCount" id="movesCount" value="3" />
+        <input type="number" name="movesCount" id="movesCount" value="100" />
       </label>
-      <button type="button" id="makeGameGIF">Make game GIF</button>
+      <label>
+        Speed (in milliseconds):
+        <input
+          type="number"
+          name="gameGifSpeed"
+          id="gameGifSpeed"
+          value="500"
+        />
+      </label>
+      <button type="button" id="makeGameGIF">Record game into GIF</button>
     </div>
+    <div id="singleLog" style="white-space: pre-line"></div>
     <script src="popup.js"></script>
   </body>
 </html>

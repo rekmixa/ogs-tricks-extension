@@ -23,6 +23,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     capture(windowId, tabId, sendResponse)
     return true // async
   }
+
+  if (msg.type === 'downloadBlob') {
+    chrome.downloads.download({
+      url: msg.url,
+      filename: msg.filename,
+      saveAs: true,
+    })
+  }
 })
 
 function capture(windowId, tabId, sendResponse) {

@@ -430,62 +430,34 @@ const makeBlockScreenshot = (selector) => {
   })
 }
 
-const downloadFile = (url) => {
+const downloadFile = (url, name) => {
   const a = document.createElement('a')
   a.href = url
-  a.download = 'goban.png'
+  a.download = name
   a.click()
-}
-
-const createGIF = (frames, frameDelay = 500) => {
-  return new Promise((resolve, reject) => {
-    try {
-      // Создаём GIF
-      const gif = new GIF({
-        workers: 2,
-        quality: 10,
-        workerScript: chrome.runtime.getURL('lib/gif.worker.js'),
-      })
-
-      let loadedCount = 0
-
-      frames.forEach((dataUrl) => {
-        const img = new Image()
-        img.src = dataUrl
-        img.onload = () => {
-          gif.addFrame(img, { delay: frameDelay })
-          loadedCount++
-          if (loadedCount === frames.length) {
-            gif.render()
-          }
-        }
-        img.onerror = reject
-      })
-
-      gif.on('finished', (blob) => {
-        // Отправляем готовый Blob в background для скачивания
-        const url = URL.createObjectURL(blob)
-
-        resolve(url)
-      })
-    } catch (err) {
-      console.error(err)
-    }
-  })
 }
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-chrome.runtime.onMessage.addListener(async (msg) => {
+const logToPopup = (message) => {
+  console.log(message)
+  chrome.runtime.sendMessage({
+    type: 'popupSingleLog',
+    message,
+  })
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   console.log(msg)
   const gobanSelector = 'div.Goban[data-game-id]'
 
   switch (msg.type) {
     case 'makeGameScreenshot':
-      const url = await makeBlockScreenshot(gobanSelector)
-      downloadFile(url)
+      makeBlockScreenshot(gobanSelector).then((url) => {
+        downloadFile(url, 'goban.png')
+      })
       break
-    case 'makeGameGIF':
+    case 'makeGameGIFFrames':
       const stepForwardIcon = document.querySelector(
         'button.move-control > i.fa-step-forward',
       )
@@ -500,17 +472,29 @@ chrome.runtime.onMessage.addListener(async (msg) => {
         return
       }
 
-      const screenshots = []
-      for (let i = 0; i < Number(msg.movesCount); i++) {
-        console.log(i)
-        nextMoveButton.click()
-        screenshots.push(await makeBlockScreenshot(gobanSelector))
-        await delay(300)
+      const makeFrames = async () => {
+        const screenshots = []
+        for (let i = 0; i < msg.movesCount + 1; i++) {
+          logToPopup(
+            `Recording move ${
+              i + 1
+            }...\nPlease, dont close extension popup before recording will end!`,
+          )
+          screenshots.push(await makeBlockScreenshot(gobanSelector))
+          nextMoveButton.click()
+          await delay(300)
+        }
+
+        return screenshots
       }
 
-      const gifUrl = await createGIF(screenshots, 500)
-      downloadFile(gifUrl)
+      makeFrames().then((frames) => {
+        logToPopup(
+          `Processing GIF...\nPlease, dont close extension popup before recording will end!`,
+        )
+        sendResponse(frames)
+      })
 
-      break
+      return true
   }
 })
