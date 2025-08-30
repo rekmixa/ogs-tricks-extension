@@ -1,5 +1,5 @@
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg.type === "captureTab") {
+  if (msg.type === 'captureTab') {
     let tabId, windowId
 
     if (sender.tab) {
@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     } else {
       // fallback: активная вкладка текущего окна
       chrome.windows.getCurrent({ populate: true }, (win) => {
-        const activeTab = win.tabs.find(t => t.active)
+        const activeTab = win.tabs.find((t) => t.active)
         if (!activeTab) return sendResponse(null)
         tabId = activeTab.id
         windowId = win.id
@@ -28,7 +28,7 @@ function capture(windowId, tabId, sendResponse) {
     return
   }
 
-  chrome.tabs.captureVisibleTab(windowId, { format: "png" }, (dataUrl) => {
+  chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (dataUrl) => {
     if (chrome.runtime.lastError) {
       console.error(chrome.runtime.lastError.message)
       sendResponse(null)

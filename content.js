@@ -228,7 +228,9 @@ const extension = {
     }
 
     if (this.gobanState.stonesColor !== null) {
-      const defs = gobanSvg.querySelector(`defs > g[id="${this.gobanState.stonesColor.replace('#', '')}"]`)
+      const defs = gobanSvg.querySelector(
+        `defs > g[id="${this.gobanState.stonesColor.replace('#', '')}"]`,
+      )
       if (defs === null) {
         this.gobanState.stonesColor = null
       }
@@ -252,7 +254,7 @@ const extension = {
 
     const allStones = gobanSvg.querySelectorAll('g.grid > g')
 
-    allStones.forEach(stone => {
+    allStones.forEach((stone) => {
       const use = stone.querySelector('use[href]')
       if (use === null) {
         return
@@ -266,7 +268,10 @@ const extension = {
       if (enabled) {
         use.setAttribute('data-old-href', color)
         use.setAttribute('href', this.gobanState.stonesColor)
-      } else if (use.hasAttribute('data-old-href') && use.getAttribute('href') !== use.getAttribute('data-old-href')) {
+      } else if (
+        use.hasAttribute('data-old-href') &&
+        use.getAttribute('href') !== use.getAttribute('data-old-href')
+      ) {
         use.setAttribute('href', use.getAttribute('data-old-href'))
       }
     })
@@ -275,23 +280,40 @@ const extension = {
 
     if (lastMoveCircle !== null) {
       if (!lastMoveCircle.hasAttribute('data-old-stroke')) {
-        lastMoveCircle.setAttribute('data-old-stroke', lastMoveCircle.getAttribute('stroke'))
+        lastMoveCircle.setAttribute(
+          'data-old-stroke',
+          lastMoveCircle.getAttribute('stroke'),
+        )
       }
-      lastMoveCircle.setAttribute('stroke', enabled ? (this.gobanState.isWhite ? '#000000' : '#FFFFFF') : lastMoveCircle.getAttribute('data-old-stroke'))
+      lastMoveCircle.setAttribute(
+        'stroke',
+        enabled
+          ? this.gobanState.isWhite
+            ? '#000000'
+            : '#FFFFFF'
+          : lastMoveCircle.getAttribute('data-old-stroke'),
+      )
     }
 
     const textLetters = gobanSvg.querySelectorAll('g.grid text.letter')
-    textLetters.forEach(letter => {
+    textLetters.forEach((letter) => {
       if (!letter.hasAttribute('data-old-fill')) {
         letter.setAttribute('data-old-fill', letter.getAttribute('fill'))
       }
-      letter.setAttribute('fill', enabled ? (this.gobanState.isWhite ? '#000000' : '#FFFFFF') : letter.getAttribute('data-old-fill'))
+      letter.setAttribute(
+        'fill',
+        enabled
+          ? this.gobanState.isWhite
+            ? '#000000'
+            : '#FFFFFF'
+          : letter.getAttribute('data-old-fill'),
+      )
     })
 
     const rectangles = gobanSvg.querySelectorAll('g.grid rect[fill][stroke]')
     let firstRectangle = null
 
-    rectangles.forEach(rect => {
+    rectangles.forEach((rect) => {
       if (firstRectangle === null) {
         firstRectangle = rect
       }
@@ -306,16 +328,24 @@ const extension = {
           rect.setAttribute('fill', firstRectangle.getAttribute('fill'))
         }
 
-        if (rect.getAttribute('stroke') !== firstRectangle.getAttribute('stroke')) {
+        if (
+          rect.getAttribute('stroke') !== firstRectangle.getAttribute('stroke')
+        ) {
           rect.setAttribute('data-old-stroke', rect.getAttribute('stroke'))
           rect.setAttribute('stroke', firstRectangle.getAttribute('stroke'))
         }
       } else {
-        if (rect.hasAttribute('data-old-fill') && rect.getAttribute('fill') !== rect.getAttribute('data-old-fill')) {
+        if (
+          rect.hasAttribute('data-old-fill') &&
+          rect.getAttribute('fill') !== rect.getAttribute('data-old-fill')
+        ) {
           rect.setAttribute('fill', rect.getAttribute('data-old-fill'))
         }
 
-        if (rect.hasAttribute('data-old-stroke') && rect.getAttribute('stroke') !== rect.getAttribute('data-old-stroke')) {
+        if (
+          rect.hasAttribute('data-old-stroke') &&
+          rect.getAttribute('stroke') !== rect.getAttribute('data-old-stroke')
+        ) {
           rect.setAttribute('stroke', rect.getAttribute('data-old-stroke'))
         }
       }
@@ -361,44 +391,55 @@ const extension = {
       console.log('hideLastMoveMark', data)
       this.applyHideLastMoveMarkStyles(data.hideLastMoveMark)
     })
-  }
+  },
 }
 
 extension.init()
 
-chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
-  if (msg.type !== "makeGameScreenshot") return
+const makeBlockScreenshot = (selector) => {
+  return new Promise((resolve) => {
+    const block = document.querySelector(selector)
+    if (!block) return console.error('Block not found')
 
-  const block = document.querySelector("div.Goban[data-game-id]")
-  if (!block) return console.error("Block not found")
+    // попросим background сделать скриншот вкладки
+    chrome.runtime.sendMessage({ type: 'captureTab' }, (dataUrl) => {
+      if (!dataUrl) return console.error('Screenshot failed')
+      const dpr = window.devicePixelRatio || 1
+      const rect = block.getBoundingClientRect()
+      const x = rect.left * dpr
+      const y = rect.top * dpr
+      const width = rect.width * dpr
+      const height = rect.height * dpr
 
-  // попросим background сделать скриншот вкладки
-  chrome.runtime.sendMessage({ type: "captureTab" }, (dataUrl) => {
-    if (!dataUrl) return console.error("Screenshot failed")
-    const dpr = window.devicePixelRatio || 1
-    const rect = block.getBoundingClientRect()
-    const x = rect.left * dpr
-    const y = rect.top * dpr
-    const width = rect.width * dpr
-    const height = rect.height * dpr
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
 
-    const canvas = document.createElement("canvas")
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext("2d")
+      const img = new Image()
+      img.onload = () => {
+        ctx.drawImage(img, x, y, width, height, 0, 0, width, height)
 
-    const img = new Image()
-    img.onload = () => {
-      ctx.drawImage(img, x, y, width, height, 0, 0, width, height)
-
-      canvas.toBlob(blob => {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = "goban.png"
-        a.click()
-      })
-    }
-    img.src = dataUrl
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob)
+          resolve(url)
+        })
+      }
+      img.src = dataUrl
+    })
   })
+}
+
+const downloadFile = (url) => {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'goban.png'
+  a.click()
+}
+
+chrome.runtime.onMessage.addListener(async (msg) => {
+  if (msg.type !== 'makeGameScreenshot') return
+
+  const url = await makeBlockScreenshot('div.Goban[data-game-id]')
+  downloadFile(url)
 })

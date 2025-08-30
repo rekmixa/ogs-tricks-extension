@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
   makeGameScreenshotButton.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tabId = tabs[0].id // только число
-      chrome.tabs.sendMessage(tabId, { type: "makeGameScreenshot" })
+      chrome.tabs.sendMessage(tabId, { type: 'makeGameScreenshot' })
     })
   })
 })
