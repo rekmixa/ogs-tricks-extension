@@ -451,10 +451,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   console.log(msg)
   const gobanSelector = 'div.Goban[data-game-id]'
 
+  const playerNames = document.querySelectorAll('.Player-username')
+  let gameName = 'game'
+  try {
+    if (playerNames.length === 2) {
+      gameName = `${playerNames[0].textContent}-${playerNames[1].textContent}`
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
   switch (msg.type) {
     case 'makeGameScreenshot':
       makeBlockScreenshot(gobanSelector).then((url) => {
-        downloadFile(url, 'goban.png')
+        downloadFile(url, `${gameName}.png`)
       })
       break
     case 'makeGameGIFFrames':
@@ -476,9 +486,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const screenshots = []
         for (let i = 0; i < msg.movesCount + 1; i++) {
           logToPopup(
-            `Recording move ${
-              i + 1
-            }...\nPlease, dont close extension popup before recording will end!`,
+            `Recording move ${i}...\nPlease, dont close extension popup before recording will end!`,
           )
           screenshots.push(await makeBlockScreenshot(gobanSelector))
           nextMoveButton.click()
@@ -492,7 +500,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         logToPopup(
           `Processing GIF...\nPlease, dont close extension popup before recording will end!`,
         )
-        sendResponse(frames)
+        sendResponse({ frames, filename: `${gameName}.gif` })
       })
 
       return true

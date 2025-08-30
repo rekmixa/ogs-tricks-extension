@@ -104,17 +104,18 @@ document.addEventListener('DOMContentLoaded', function () {
       chrome.tabs.sendMessage(
         tabId,
         { type: 'makeGameGIFFrames', movesCount },
-        async (frames) => {
+        async ({ frames, filename }) => {
           if (!frames) {
             alert('no frames!')
             return
           }
 
           const gifUrl = await createGIF(frames, gameGifSpeed)
+
           chrome.runtime.sendMessage({
             type: 'downloadBlob',
             url: gifUrl,
-            filename: 'game.gif',
+            filename,
           })
         },
       )
